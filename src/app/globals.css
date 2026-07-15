@@ -1,1 +1,125 @@
 @import "tailwindcss";
+
+@theme {
+  --color-brand-900: #092838;
+  --color-brand-800: #0d3a52;
+  --color-brand-700: #12506f;
+  --color-brand-600: #1a6b8f;
+  --color-brand-500: #2a8fb5;
+  --color-brand-400: #4fb3d4;
+  --color-brand-300: #7cc8e0;
+  --color-brand-100: #cfe9f3;
+
+  --color-accent-600: #7423fe;
+  --color-accent-500: #8b46ff;
+  --color-accent-400: #a46dff;
+
+  --color-muted-900: #0b1b29;
+  --color-muted-800: #10212f;
+  --color-muted-700: #15303f;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background-color: #ffffff;
+  color: #4a5a68;
+  font-family: var(--font-sans);
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+.container-x {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.sec-title h5 {
+  color: var(--color-accent-600);
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.sec-title h2 {
+  color: var(--color-brand-900);
+  font-size: clamp(26px, 3vw, 38px);
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.sec-title.light h5,
+.sec-title.light h2 {
+  color: #ffffff;
+}
+
+.sec-title.centred {
+  text-align: center;
+}
+
+.btn-primary {
+  display: inline-block;
+  background: linear-gradient(135deg, #7423fe 0%, #2a8fb5 100%);
+  color: #fff;
+  font-weight: 700;
+  padding: 14px 32px;
+  border-radius: 6px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(116, 35, 254, 0.35);
+}
+
+.btn-outline {
+  display: inline-block;
+  border: 2px solid #fff;
+  color: #fff;
+  font-weight: 600;
+  padding: 12px 30px;
+  border-radius: 6px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.btn-outline:hover {
+  background: #fff;
+  color: var(--color-brand-900);
+}
+
+.gradient-card {
+  background: linear-gradient(160deg, #7423fe 0%, #2a8fb5 100%);
+}
+
+.hero-overlay {
+  background: linear-gradient(90deg, rgba(9, 40, 56, 0.85) 0%, rgba(9, 40, 56, 0.35) 100%);
+}
+
+@media (max-width: 768px) {
+  .mobile-menu.hidden-menu {
+    transform: translateX(100%);
+  }
+}
