@@ -1,5 +1,33 @@
 @import "tailwindcss";
 
+@viewport {
+  width: device-width;
+  zoom: 1;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  input,
+  select,
+  textarea,
+  button {
+    font-size: 16px;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+}
+
 @theme {
   --color-brand-900: #092838;
   --color-brand-800: #0d3a52;
@@ -52,7 +80,21 @@ img {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 16px;
+}
+
+@media (min-width: 768px) {
+  .container-x {
+    padding: 0 20px;
+  }
+}
+
+.tap {
+  min-height: 44px;
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
 .sec-title h5 {

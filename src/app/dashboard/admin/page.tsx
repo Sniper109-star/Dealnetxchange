@@ -71,7 +71,7 @@ export default async function AdminPage() {
 
       <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
         <h2 className="mb-4 text-lg font-bold text-brand-900">Users</h2>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto hidden md:block">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b text-left text-gray-400">
@@ -94,6 +94,21 @@ export default async function AdminPage() {
               ))}
             </tbody>
           </table>
+        </div>
+        <div className="space-y-3 md:hidden">
+          {users.map((u) => (
+            <div key={u.id} className="rounded-lg border border-gray-50 bg-gray-50 p-4">
+              <div className="flex items-center justify-between">
+                <p className="font-semibold text-brand-900">{u.name}</p>
+                <span className="rounded-full bg-brand-100 px-2 py-0.5 text-xs font-semibold capitalize text-brand-900">{u.role}</span>
+              </div>
+              <p className="mt-1 text-sm text-gray-600">{u.email}</p>
+              <div className="mt-2 flex gap-4 text-sm text-gray-500">
+                <span>Balance: <b className="text-brand-900">{fmt(u.balance)}</b></span>
+                <span>{u.country}</span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 

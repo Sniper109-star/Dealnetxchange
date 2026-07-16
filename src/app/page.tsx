@@ -337,12 +337,12 @@ export default function Home() {
             and from the fiat currency of your choice.
           </p>
           <div
-            className="mx-auto mt-6 overflow-hidden rounded-md border border-gray-300 bg-[#FAFAFA]"
-            style={{ width: 300, height: 335 }}
+            className="mx-auto mt-6 max-w-[340px] overflow-hidden rounded-md border border-gray-300 bg-[#FAFAFA]"
+            style={{ height: 335 }}
           >
             <iframe
               src="https://widget.coinlib.io/widget?type=converter&theme=light"
-              width="300"
+              width="100%"
               height="335"
               title="Cryptocurrency converter"
               className="border-0"

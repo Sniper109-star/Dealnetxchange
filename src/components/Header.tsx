@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { NAV } from "@/lib/site";
 import { Logo } from "./Logo";
@@ -9,33 +9,39 @@ export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
+
   return (
-    <header className="relative z-50 bg-white shadow-sm">
+    <header className="sticky top-0 z-50 bg-white shadow-sm">
       <div className="border-b border-gray-100">
-        <div className="container-x flex flex-col gap-2 py-2">
-          <div className="flex items-center justify-between gap-4">
-            <Logo />
-            <div className="hidden items-center gap-2 md:flex">
-              <Link
-                href="/login"
-                className="rounded-md px-4 py-2 text-sm font-semibold text-brand-900 hover:text-accent-600"
-              >
-                Login
-              </Link>
-              <Link href="/signup" className="btn-primary px-5 py-2 text-sm">
-                Sign Up
-              </Link>
-            </div>
-            <button
-              className="flex flex-col gap-1 md:hidden"
-              aria-label="Toggle menu"
-              onClick={() => setMobileOpen((v) => !v)}
+        <div className="container-x flex items-center justify-between py-3">
+          <Logo />
+          <div className="hidden items-center gap-2 md:flex">
+            <Link
+              href="/login"
+              className="rounded-md px-4 py-2 text-sm font-semibold text-brand-900 hover:text-accent-600"
             >
-              <span className="h-0.5 w-6 bg-brand-900" />
-              <span className="h-0.5 w-6 bg-brand-900" />
-              <span className="h-0.5 w-6 bg-brand-900" />
-            </button>
+              Login
+            </Link>
+            <Link href="/signup" className="btn-primary px-5 py-2 text-sm">
+              Sign Up
+            </Link>
           </div>
+          <button
+            className="flex flex-col gap-1.5 p-2 md:hidden"
+            aria-label="Toggle menu"
+            aria-expanded={mobileOpen}
+            onClick={() => setMobileOpen((v) => !v)}
+          >
+            <span className="h-0.5 w-6 bg-brand-900" />
+            <span className="h-0.5 w-6 bg-brand-900" />
+            <span className="h-0.5 w-6 bg-brand-900" />
+          </button>
         </div>
       </div>
 
@@ -80,40 +86,73 @@ export default function Header() {
       </div>
 
       {mobileOpen && (
-        <div className="border-t border-gray-100 bg-white md:hidden">
-          <nav className="container-x flex flex-col py-2">
-            {NAV.map((item) => (
-              <div key={item.label} className="border-b border-gray-50">
-                {item.children ? (
-                  <>
-                    <p className="px-2 py-3 text-sm font-bold text-brand-900">
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setMobileOpen(false)}
+            aria-hidden
+          />
+          <div className="absolute right-0 top-0 flex h-full w-[82%] max-w-xs flex-col bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+              <span className="text-lg font-extrabold text-brand-900">Menu</span>
+              <button
+                className="rounded-md p-2 text-2xl leading-none text-brand-900"
+                aria-label="Close menu"
+                onClick={() => setMobileOpen(false)}
+              >
+                &times;
+              </button>
+            </div>
+            <nav className="flex-1 overflow-y-auto px-2 py-3">
+              {NAV.map((item) => (
+                <div key={item.label} className="border-b border-gray-50">
+                  {item.children ? (
+                    <>
+                      <p className="px-3 py-3 text-sm font-bold text-brand-900">
+                        {item.label}
+                      </p>
+                      <div className="pb-2">
+                        {item.children.map((child) => (
+                          <Link
+                            key={child.href}
+                            href={child.href}
+                            className="block rounded-md px-4 py-3 text-sm text-gray-600 active:bg-brand-100"
+                            onClick={() => setMobileOpen(false)}
+                          >
+                            {child.label}
+                          </Link>
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    <Link
+                      href={item.href}
+                      className="block rounded-md px-3 py-3 text-sm font-bold text-brand-900 active:bg-brand-100"
+                      onClick={() => setMobileOpen(false)}
+                    >
                       {item.label}
-                    </p>
-                    <div className="flex flex-col pb-2">
-                      {item.children.map((child) => (
-                        <Link
-                          key={child.href}
-                          href={child.href}
-                          className="px-4 py-2 text-sm text-gray-600"
-                          onClick={() => setMobileOpen(false)}
-                        >
-                          {child.label}
-                        </Link>
-                      ))}
-                    </div>
-                  </>
-                ) : (
-                  <Link
-                    href={item.href}
-                    className="block px-2 py-3 text-sm font-bold text-brand-900"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    {item.label}
-                  </Link>
-                )}
-              </div>
-            ))}
-          </nav>
+                    </Link>
+                  )}
+                </div>
+              ))}
+            </nav>
+            <div className="grid grid-cols-2 gap-2 border-t border-gray-100 p-4">
+              <Link
+                href="/login"
+                className="rounded-md border border-brand-900 py-3 text-center text-sm font-semibold text-brand-900"
+                onClick={() => setMobileOpen(false)}
+              >
+                Login
+              </Link>
+              <Link
+                href="/signup"
+                className="btn-primary py-3 text-center text-sm"
+                onClick={() => setMobileOpen(false)}
+              >
+                Sign Up
+              </Link>
+            </div>
+          </div>
         </div>
       )}
     </header>
