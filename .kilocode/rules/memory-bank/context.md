@@ -7,6 +7,8 @@
 Cloned the structure/design of `vintageguarantee.com` and rebranded it to **Dealnetxchange**. The site is a Next.js 16 (App Router) + React 19 + Tailwind CSS 4 application with 15 routes, a shared header/footer, and a working contact API route.
 
 ## Recently Completed
+- [x] **Mobile-first UI/UX upgrade**: sticky header with slide-in mobile drawer (scroll lock), dashboard bottom nav on mobile + sidebar on desktop, responsive dashboard/admin layouts, admin users table → cards on mobile, viewport meta, 16px inputs, safe-area padding
+- [x] **Portability setup**: added `.env.example`, `README.md`, and `.github/workflows/ci.yml` (Bun + typecheck/lint/build)
 - [x] Rebranded site name to Dealnetxchange (logo, nav, footer, metadata, content)
 - [x] Global Tailwind v4 theme (brand/accent colors, buttons, containers)
 - [x] Shared `Header` (desktop dropdowns + mobile menu) and `Footer` components
@@ -48,3 +50,4 @@ Cloned the structure/design of `vintageguarantee.com` and rebranded it to **Deal
 | Initial | Template created with base setup |
 | 2026-07-15 | Cloned vintageguarantee.com design, rebranded to Dealnetxchange, built all pages |
 | 2026-07-16 | Added full-stack dashboard: auth, API routes, client + admin panels; committed & pushed |
+| 2026-07-16 | Mobile-first UI/UX upgrade (drawer, bottom nav, responsive admin) + portability files (.env.example, README, CI workflow); committed & pushed |
