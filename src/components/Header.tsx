@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Show, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
 import { NAV } from "@/lib/site";
 import { Logo } from "./Logo";
 
@@ -22,15 +23,22 @@ export default function Header() {
         <div className="container-x flex items-center justify-between py-3">
           <Logo />
           <div className="hidden items-center gap-2 md:flex">
-            <Link
-              href="/login"
-              className="rounded-md px-4 py-2 text-sm font-semibold text-brand-900 hover:text-accent-600"
-            >
-              Login
-            </Link>
-            <Link href="/signup" className="btn-primary px-5 py-2 text-sm">
-              Sign Up
-            </Link>
+            <Show when="signed-out">
+              <SignInButton mode="redirect">
+                <button className="rounded-md px-4 py-2 text-sm font-semibold text-brand-900 hover:text-accent-600">
+                  Login
+                </button>
+              </SignInButton>
+              <SignUpButton mode="redirect">
+                <button className="btn-primary px-5 py-2 text-sm">Sign Up</button>
+              </SignUpButton>
+            </Show>
+            <Show when="signed-in">
+              <Link href="/dashboard" className="rounded-md px-4 py-2 text-sm font-semibold text-brand-900 hover:text-accent-600">
+                Dashboard
+              </Link>
+              <UserButton />
+            </Show>
           </div>
           <button
             className="flex flex-col gap-1.5 p-2 md:hidden"
@@ -137,20 +145,21 @@ export default function Header() {
               ))}
             </nav>
             <div className="grid grid-cols-2 gap-2 border-t border-gray-100 p-4">
-              <Link
-                href="/login"
-                className="rounded-md border border-brand-900 py-3 text-center text-sm font-semibold text-brand-900"
-                onClick={() => setMobileOpen(false)}
-              >
-                Login
-              </Link>
-              <Link
-                href="/signup"
-                className="btn-primary py-3 text-center text-sm"
-                onClick={() => setMobileOpen(false)}
-              >
-                Sign Up
-              </Link>
+              <Show when="signed-out">
+                <SignInButton mode="redirect">
+                  <button className="rounded-md border border-brand-900 py-3 text-center text-sm font-semibold text-brand-900">
+                    Login
+                  </button>
+                </SignInButton>
+                <SignUpButton mode="redirect">
+                  <button className="btn-primary py-3 text-center text-sm">Sign Up</button>
+                </SignUpButton>
+              </Show>
+              <Show when="signed-in">
+                <Link href="/dashboard" className="btn-primary col-span-2 py-3 text-center text-sm" onClick={() => setMobileOpen(false)}>
+                  Go to Dashboard
+                </Link>
+              </Show>
             </div>
           </div>
         </div>

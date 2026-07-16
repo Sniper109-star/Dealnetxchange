@@ -53,6 +53,8 @@ built as a clean, portable Next.js template you can fork and extend.
 | UI Library     | [React 19](https://react.dev/)                    |
 | Styling        | [Tailwind CSS v4](https://tailwindcss.com/)       |
 | Language       | [TypeScript](https://www.typescriptlang.org/) 5   |
+| Auth           | [Clerk](https://clerk.com/) (`@clerk/nextjs`)     |
+| Email          | [React Email](https://react.email/) + [Resend](https://resend.com/) |
 | Package mgr    | [Bun](https://bun.sh/)                            |
 | Data store     | In-memory store (`src/lib/db.ts`), seeded per cold start |
 | Linting        | ESLint (Next.js config)                           |
@@ -79,8 +81,11 @@ built as a clean, portable Next.js template you can fork and extend.
 │   ├── lib/
 │   │   ├── site.ts             # Site config (name, email, address, nav)
 │   │   ├── db.ts               # In-memory data store + types + seed
-│   │   └── auth.ts             # Session cookie encode/decode + getSessionUser()
-│   └── middleware.ts           # Protects /dashboard/*, role-gates admin
+│   │   ├── auth.ts             # Clerk session helpers (getSessionUser)
+│   │   └── email.ts            # Resend sender + typed email helpers
+│   ├── emails/                 # React Email templates + shared layout
+│   ├── proxy.ts                # Clerk middleware (Next.js 16 boundary)
+│   └── app/dev/email/[template]  # Dev preview route for email templates
 ├── .github/workflows/ci.yml    # CI: typecheck + lint + build
 ├── .env.example                # Example environment variables
 ├── next.config.ts
@@ -118,14 +123,14 @@ Open <http://localhost:3000> in your browser.
 
 ### Demo Accounts
 
-The in-memory database is seeded with two accounts:
+Auth is provided by Clerk, so create your own test users in the
+[Clerk Dashboard](https://dashboard.clerk.com) (or use the hosted sign-up).
+To grant admin access, set `publicMetadata.role = "admin"` on a user. The
+local in-memory store seeds two demo *profiles* (linked by `clerkId`) so the
+dashboard shows sample investments/deposits/withdrawals on first sign-in.
 
-| Role   | Email                       | Password   |
-| ------ | --------------------------- | ---------- |
-| Client | `client@dealnetxchange.com` | `client123` |
-| Admin  | `admin@dealnetxchange.com`  | `admin123` |
-
-> ⚠️ Data is reset on every server restart because the store is in-memory.
+> ⚠️ Domain data (balances, transactions) is reset on every server restart
+> because the store is in-memory.
 
 ---
 
@@ -138,6 +143,7 @@ The in-memory database is seeded with two accounts:
 | `bun start`         | Run the production server               |
 | `bun lint`          | Lint the codebase with ESLint           |
 | `bun typecheck`     | Type-check with `tsc --noEmit`          |
+| `bun email`         | React Email preview dev server          |
 
 Using npm instead of Bun: replace `bun` with `npm run` (e.g. `npm run dev`).
 
@@ -145,30 +151,82 @@ Using npm instead of Bun: replace `bun` with `npm run` (e.g. `npm run dev`).
 
 ## Environment Variables
 
-Copy `.env.example` to `.env.local` and adjust as needed. All variables are
-optional for local development.
+Copy `.env.example` to `.env.local` and adjust as needed. **Clerk and Resend
+keys are required for auth/email to function**; without them, the app builds
+and runs but protected routes redirect to sign-in and emails are logged to the
+console.
 
-| Variable                | Description                                              |
-| ----------------------- | -------------------------------------------------------- |
-| `NEXT_PUBLIC_SITE_URL`  | Absolute site URL for metadata/links (default `http://localhost:3000`) |
-| `SESSION_SECRET`        | Long random string used for session signing (placeholder) |
-| `DATABASE_URL`          | Connection string for a real database (when wired up)    |
+| Variable                            | Description                                              |
+| ----------------------------------- | -------------------------------------------------------- |
+| `NEXT_PUBLIC_SITE_URL`              | Absolute site URL for metadata/links (default `http://localhost:3000`) |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`| Clerk publishable key (`pk_test_...`)                    |
+| `CLERK_SECRET_KEY`                  | Clerk secret key (`sk_test_...`)                         |
+| `NEXT_PUBLIC_CLERK_SIGN_IN_URL`     | Path to sign-in page (`/sign-in`)                        |
+| `NEXT_PUBLIC_CLERK_SIGN_UP_URL`     | Path to sign-up page (`/sign-up`)                        |
+| `RESEND_API_KEY`                    | Resend API key (`re_...`)                                |
+| `EMAIL_FROM`                        | Verified sender, e.g. `"Dealnetxchange <onboarding@resend.dev>"` |
+| `EMAIL_REPLY_TO`                    | Support inbox for contact emails                        |
+| `DATABASE_URL`                      | Connection string for a real database (when wired up)    |
 
 `.env*` files are gitignored; only `.env.example` is committed.
 
 ---
 
-## Authentication & Sessions
+## Authentication & Sessions (Clerk)
 
-- Sessions are stored in an `httpOnly`, `sameSite: lax` cookie
-  (`dealnet_session`) containing a base64url-encoded JSON payload
-  `{ userId, role }` (`src/lib/auth.ts`).
-- `getSessionUser()` reads the cookie, decodes it, and resolves the user from
-  the data store.
-- `src/middleware.ts` protects `/dashboard/*` (redirects anonymous users to
-  `/login` with a `?next=` param) and role-gates `/dashboard/admin`
-  (non-admins are redirected to `/dashboard`). Authenticated users hitting
-  `/login` or `/signup` are redirected to `/dashboard`.
+Authentication is handled by [Clerk](https://clerk.com/) (`@clerk/nextjs` v7):
+
+- `ClerkProvider` wraps the app in `src/app/layout.tsx`.
+- `src/proxy.ts` (Next.js 16 network boundary) runs `clerkMiddleware()`,
+  protecting `/dashboard/*` and role-gating `/dashboard/admin`. Public routes
+  (marketing pages, `/sign-in`, `/sign-up`, contact & email APIs) are excluded.
+- Sign-in/out UI uses Clerk's `<SignIn>`, `<SignUp>`, `<UserButton>`,
+  `<SignedIn>`/`<SignedOut>` components (see `Header.tsx`, `LogoutButton.tsx`).
+- `src/lib/auth.ts` exposes `getSessionUser()` / `getOrCreateUserWithWelcome()`
+  which resolve the Clerk user via `currentUser()` and sync them into the local
+  in-memory store (`src/lib/db.ts`) keyed by `clerkId`.
+- **Admin role**: set `publicMetadata.role = "admin"` on a Clerk user (Dashboard
+  → Users → the user → Metadata) to grant access to `/dashboard/admin`.
+
+### Environment
+
+```
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+CLERK_SECRET_KEY=sk_test_...
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+```
+
+---
+
+## Email & Notifications (React Email + Resend)
+
+Transactional emails are authored as React components with
+[React Email](https://react.email/) and delivered via
+[Resend](https://resend.com/):
+
+- **Templates** (`src/emails/`): `WelcomeEmail`, `DepositEmail`,
+  `WithdrawalEmail`, `TransactionUpdateEmail`, `ContactEmail` /
+  `ContactConfirmationEmail`, sharing `EmailLayout.tsx`.
+- **Sender service** (`src/lib/email.ts`): a typed `sendEmail()` wrapper around
+  `resend.emails.send({ react })`, plus one helper per template.
+- **Triggers**: a welcome email on first sign-in; deposit/withdrawal
+  confirmations on submit; admin approve/reject notifications; and a contact
+  form that emails support and sends the user a confirmation.
+- **Preview**: visit `/dev/email/<template>` (e.g. `/dev/email/welcome`) to
+  render any template, or run `bun email` for the React Email dev server.
+
+### Environment
+
+```
+RESEND_API_KEY=re_...
+EMAIL_FROM="Dealnetxchange <onboarding@resend.dev>"
+EMAIL_REPLY_TO=support@dealnetxchange.com
+```
+
+> Without `RESEND_API_KEY` (or with a placeholder), the app logs intended
+> emails to the server console instead of failing requests — handy for local
+> development.
 
 ---
 
@@ -276,11 +334,13 @@ and `build` on every push/PR to `main`.
 
 This is a **demo template**, not production-hardened:
 
-- Passwords are stored in plaintext in the seed data and compared directly.
-- Session tokens are base64url-encoded JSON (not signed/encrypted). Use a signed
-  session (e.g. `jose` / IronSession) and hashed passwords (e.g. `bcrypt`) in
-  production.
+- Authentication, sessions, and password handling are delegated to
+  [Clerk](https://clerk.com/) — credentials are never stored in this app.
+- Admin authorization is driven by Clerk `publicMetadata.role`; the admin route
+  is protected server-side via `proxy.ts` and `getOrCreateUserWithWelcome()`.
 - The in-memory store resets on restart — replace with a persistent database.
+- Verify your Resend sender domain (SPF/DKIM/DMARC) before sending to real
+  users; emails from `onboarding@resend.dev` are dev-only.
 
 ---
 

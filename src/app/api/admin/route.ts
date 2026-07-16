@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { db, publicUser } from "@/lib/db";
+import { db, publicUser, fmt } from "@/lib/db";
 import { getSessionUser } from "@/lib/auth";
+import { sendTransactionUpdateEmail } from "@/lib/email";
 
 export async function GET() {
   const admin = await getSessionUser();
@@ -51,6 +52,15 @@ export async function PATCH(request: Request) {
     }
     if (type === "withdrawal" && action === "approved") {
       user.balance -= tx.amount;
+    }
+    try {
+      await sendTransactionUpdateEmail(user.email, user.name, {
+        type,
+        amount: fmt(tx.amount),
+        action,
+      });
+    } catch {
+      /* email failures must not break the request */
     }
   }
 

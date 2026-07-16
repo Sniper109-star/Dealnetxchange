@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getSessionUser } from "@/lib/auth";
+import { getOrCreateUserWithWelcome } from "@/lib/auth";
 import Sidebar from "@/components/dashboard/Sidebar";
 import LogoutButton from "@/components/LogoutButton";
 
@@ -9,8 +9,8 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const user = await getSessionUser();
-  if (!user) redirect("/login");
+  const user = await getOrCreateUserWithWelcome();
+  if (!user) redirect("/sign-in");
 
   return (
     <div className="flex min-h-screen bg-gray-50">

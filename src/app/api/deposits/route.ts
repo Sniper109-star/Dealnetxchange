@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { db, fmt } from "@/lib/db";
 import { getSessionUser } from "@/lib/auth";
+import { sendDepositEmail } from "@/lib/email";
 
 export async function GET() {
   const user = await getSessionUser();
@@ -33,5 +34,12 @@ export async function POST(request: Request) {
     createdAt: new Date().toISOString(),
   };
   db.deposits.push(deposit);
+
+  try {
+    await sendDepositEmail(user.email, user.name, fmt(amount), method);
+  } catch {
+    /* email failures must not break the request */
+  }
+
   return NextResponse.json({ success: true, deposit });
 }

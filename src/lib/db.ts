@@ -13,6 +13,7 @@ export interface Plan {
 
 export interface User {
   id: string;
+  clerkId: string;
   name: string;
   email: string;
   password: string;
@@ -21,6 +22,7 @@ export interface User {
   wallet: string;
   country: string;
   createdAt: string;
+  welcomedAt?: string;
 }
 
 export type TxStatus = "pending" | "approved" | "rejected";
@@ -79,6 +81,7 @@ const iso = (hours: number) =>
 function seed(): DB {
   const admin: User = {
     id: "u_admin",
+    clerkId: "user_admin",
     name: "Admin Dealnet",
     email: "admin@dealnetxchange.com",
     password: "admin123",
@@ -90,6 +93,7 @@ function seed(): DB {
   };
   const client: User = {
     id: "u_demo",
+    clerkId: "user_demo",
     name: "Demo Client",
     email: "client@dealnetxchange.com",
     password: "client123",
@@ -149,4 +153,41 @@ export function findUserById(id: string): User | undefined {
 export function publicUser(u: User) {
   const { password, ...rest } = u;
   return rest;
+}
+
+export function upsertUserFromClerk(input: {
+  clerkId: string;
+  email: string;
+  name: string;
+  role?: Role;
+}): { user: User; isNew: boolean } {
+  const existing = db.users.find((u) => u.clerkId === input.clerkId);
+  if (existing) {
+    existing.email = input.email;
+    existing.name = input.name;
+    if (input.role) existing.role = input.role;
+    return { user: existing, isNew: false };
+  }
+  const user: User = {
+    id: `u_${input.clerkId.replace(/[^a-zA-Z0-9]/g, "").slice(0, 12)}_${Date.now().toString(36)}`,
+    clerkId: input.clerkId,
+    name: input.name,
+    email: input.email,
+    password: "",
+    role: input.role ?? "client",
+    balance: 0,
+    wallet: "0x" + input.clerkId.toUpperCase().replace(/[^A-Z0-9]/g, "").padEnd(40, "0").slice(0, 40),
+    country: "Unknown",
+    createdAt: now(),
+  };
+  db.users.push(user);
+  return { user, isNew: true };
+}
+
+export function findUserByClerkId(clerkId: string): User | undefined {
+  return db.users.find((u) => u.clerkId === clerkId);
+}
+
+export function fmt(n: number): string {
+  return "$" + n.toLocaleString("en-US", { maximumFractionDigits: 2 });
 }

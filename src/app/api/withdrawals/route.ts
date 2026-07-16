@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { db, fmt } from "@/lib/db";
 import { getSessionUser } from "@/lib/auth";
+import { sendWithdrawalEmail } from "@/lib/email";
 
 export async function GET() {
   const user = await getSessionUser();
@@ -36,5 +37,12 @@ export async function POST(request: Request) {
     createdAt: new Date().toISOString(),
   };
   db.withdrawals.push(withdrawal);
+
+  try {
+    await sendWithdrawalEmail(user.email, user.name, fmt(amount), withdrawal.wallet);
+  } catch {
+    /* email failures must not break the request */
+  }
+
   return NextResponse.json({ success: true, withdrawal });
 }
